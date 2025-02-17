@@ -2,5 +2,10 @@
   "name": "@orbitsphere/server",
   "module": "src/index.ts",
   "version": "0.0.1",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@rajmazumder/grabenv": "^0.1.2",
+    "bullmq": "^5.41.2",
+    "ioredis": "^5.5.0"
+  }
 }
