@@ -1,7 +1,6 @@
 services:
   rabbitmq:
-    image: rabbitmq:management-alpine
-    hostname: rabbitmq
+    build: .
     restart: always
     container_name: rabbitmq
     ports:
