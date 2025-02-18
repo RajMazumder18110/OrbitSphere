@@ -1,0 +1,12 @@
+{
+  "name": "@orbitsphere/listener",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@orbitsphere/queues": "workspace:*",
+    "@orbitsphere/database": "workspace:*"
+  }
+}

@@ -1,1 +1,3 @@
-console.log("Hello via Bun!");
+export const sayHelloFromDatabase = () => {
+  console.log("Hello from Database");
+};
