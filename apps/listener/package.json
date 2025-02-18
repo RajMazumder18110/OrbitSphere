@@ -6,7 +6,9 @@
     "dev": "bun run src/index.ts"
   },
   "dependencies": {
+    "@orbitsphere/database": "workspace:*",
     "@orbitsphere/queues": "workspace:*",
-    "@orbitsphere/database": "workspace:*"
+    "@rajmazumder/grabenv": "^0.1.2",
+    "ethers": "^6.13.5"
   }
 }
