@@ -3,6 +3,13 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/core/index.ts"
+  },
+  "dependencies": {
+    "@rajmazumder/grabenv": "^0.1.2",
+    "amqplib": "^0.10.5"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.6"
   }
 }
