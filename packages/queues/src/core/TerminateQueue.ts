@@ -4,8 +4,11 @@ import { RabbitMQConnectionQueue } from "@/core/ConnectionQueue";
 
 /// Types
 type TerminateMessagePublishParams = {
-  message: Record<string, any>;
-  terminateTimestamp: number;
+  message: {
+    nftId: string;
+    tenant: string;
+  };
+  terminateTimestamp?: number;
 };
 
 type TerminateMessageHandler = (
@@ -13,7 +16,7 @@ type TerminateMessageHandler = (
 ) => Promise<void>;
 
 /// Terminate Queue
-export class TerminateQueue extends RabbitMQConnectionQueue {
+export class InstanceTerminateQueue extends RabbitMQConnectionQueue {
   /**
    * @notice Closes active connections.
    * This static method waits for the `closeConnections` method to finish, ensuring all connections are closed.
@@ -37,16 +40,18 @@ export class TerminateQueue extends RabbitMQConnectionQueue {
     await this.initialize();
 
     /// Publish with delay
-    const delay = terminateTimestamp * 1000 - Date.now();
+    const delay = terminateTimestamp ?? 0 * 1000 - Date.now();
 
     this.__channel.publish(
       this.ORBITSPHERE_EXCHANGE,
       this.ROUTE_TO_TERMINATE_QUEUE,
       Buffer.from(JSON.stringify(message)),
       {
-        headers: {
-          "x-delay": delay,
-        },
+        headers: terminateTimestamp
+          ? {
+              "x-delay": delay,
+            }
+          : {},
       }
     );
   }

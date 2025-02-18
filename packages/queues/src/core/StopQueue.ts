@@ -6,6 +6,7 @@ import { RabbitMQConnectionQueue } from "@/core/ConnectionQueue";
 type StopMessagePublishParams = {
   message: {
     nftId: string;
+    tenant: string;
   };
 };
 
@@ -14,7 +15,7 @@ type StopMessageHandler = (
 ) => Promise<void>;
 
 /// Stop Queue
-export class StopQueue extends RabbitMQConnectionQueue {
+export class InstanceStopQueue extends RabbitMQConnectionQueue {
   /**
    * @notice Closes active connections.
    * This static method waits for the `closeConnections` method to finish, ensuring all connections are closed.

@@ -6,6 +6,11 @@ import { RabbitMQConnectionQueue } from "@/core/ConnectionQueue";
 type RentalMessagePublishParams = {
   message: {
     nftId: string;
+    tenant: string;
+    region: string;
+    terminateOn: number;
+    sshPublicKey: string;
+    instanceType: string;
   };
 };
 
@@ -14,7 +19,7 @@ type RentalMessageHandler = (
 ) => Promise<void>;
 
 /// Rental Queue
-export class RentalQueue extends RabbitMQConnectionQueue {
+export class InstanceRentalQueue extends RabbitMQConnectionQueue {
   /**
    * @notice Closes active connections.
    * This static method waits for the `closeConnections` method to finish, ensuring all connections are closed.
