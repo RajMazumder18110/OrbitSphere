@@ -1,66 +1,51 @@
-## Foundry
+# OrbitSphere
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository contains the smart contracts for **OrbitSphere**, a decentralized server lending platform where users can rent cloud servers per hour and pay in USDC/USDT. The smart contracts handle:
 
-Foundry consists of:
+- Rental management (tracking rented instances)
+- Payment processing (USDC/USDT-based transactions)
+- Event emissions to trigger AWS automation
+- Access control and ownership
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+These contracts ensure a trustless, transparent, and efficient server rental experience using blockchain technology.
 
-## Documentation
+## Features
 
-https://book.getfoundry.sh/
+- ✅ Decentralized Server Rental – Users can rent cloud servers trustlessly
+- ✅ Automated AWS Provisioning – Blockchain events trigger AWS instance creation
+- ✅ ERC20 Stablecoin Payments – Supports USDC/USDT for seamless transactions
+- ✅ Time-Based Rentals – Users rent servers for a fixed duration
+- ✅ Smart Contract-Managed Lifecycle – Events handle server start, stop, and termination
 
-## Usage
+## Architecture
 
-### Build
+## Deployment & Setup
 
-```shell
-$ forge build
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/RajMazumder18110/OrbitSphere.git
+cd OrbitSphere
 ```
 
-### Test
+### 2️⃣ Install Dependencies
 
-```shell
-$ forge test
+```bash
+forge install
 ```
 
-### Format
+### 3️⃣ Compile Contracts
 
-```shell
-$ forge fmt
+```bash
+forge build
 ```
 
-### Gas Snapshots
+### 4️⃣ Run Tests
 
-```shell
-$ forge snapshot
+```bash
+forge test -vvv
 ```
 
-### Anvil
+## License
 
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+This project is licensed under the MIT License.
