@@ -16,6 +16,16 @@ library TestParams {
         regions[0] = AWSRegions.ASIA_MUMBAI;
     }
 
+    function getMockInstanceTypesOnlyParams()
+        public
+        pure
+        returns (bytes32[] memory types)
+    {
+        types = new bytes32[](2);
+        types[0] = AWSInstanceTypes.T2_MICRO;
+        types[1] = AWSInstanceTypes.T2_SMALL;
+    }
+
     function getMockInstanceTypeParams()
         public
         pure

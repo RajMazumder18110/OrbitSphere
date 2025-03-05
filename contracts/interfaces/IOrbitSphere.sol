@@ -24,7 +24,15 @@ interface IOrbitSphere {
     /// @param region The AWS region that was added.
     event AWSRegionAdded(bytes32 indexed region);
 
+    /// @notice Emitted when a new AWS region is removed.
+    /// @param region The AWS region that was removed.
+    event AWSRegionRemoved(bytes32 indexed region);
+
     /// @notice Emitted when a new AWS instance type is added.
     /// @param instanceType The AWS instance type that was added.
     event AWSInstanceTypeAdded(bytes32 indexed instanceType);
+
+    /// @notice Emitted when a new AWS instance type is removed.
+    /// @param instanceType The AWS instance type that was removed.
+    event AWSInstanceTypeRemoved(bytes32 indexed instanceType);
 }

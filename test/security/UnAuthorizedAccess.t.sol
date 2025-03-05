@@ -36,6 +36,14 @@ contract OrbitSphereUnAuthorizedAccessTest is Test, Context {
         sphere.addRegions(regions);
     }
 
+    function test__RemoveActiveRegionsWhenCallerIsNotOwner() public {
+        /// Prepare
+        bytes32[] memory regions = TestParams.getMockRegionParams();
+        /// Assert & Action
+        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        sphere.removeRegions(regions);
+    }
+
     function test__AddNewInstanceTypesWhenCallerIsNotOwner() public {
         /// Prepare
         IOrbitSphere.InstanceMetadata[] memory types = TestParams
@@ -43,5 +51,13 @@ contract OrbitSphereUnAuthorizedAccessTest is Test, Context {
         /// Assert & Action
         vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
         sphere.addInstanceTypes(types);
+    }
+
+    function test__RemoveActiveInstanceTypesWhenCallerIsNotOwner() public {
+        /// Prepare
+        bytes32[] memory types = TestParams.getMockInstanceTypesOnlyParams();
+        /// Assert & Action
+        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        sphere.removeInstanceTypes(types);
     }
 }

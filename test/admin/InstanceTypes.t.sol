@@ -96,4 +96,32 @@ contract OrbitSphereInstanceTypesTest is Test, Context {
             emit IOrbitSphere.AWSInstanceTypeAdded(types[i].iType);
         }
     }
+
+    function test__RemoveInstanceTypes() public afterInstanceTypeAdded {
+        /// Prepare
+        bytes32[] memory types = TestParams.getMockInstanceTypesOnlyParams();
+        /// Action
+        vm.prank(_msgSender());
+        sphere.removeInstanceTypes(types);
+        /// Assert
+        for (uint8 i; i < types.length; i++) {
+            assert(!sphere.isActiveInstanceType(types[i]));
+        }
+    }
+
+    function test__EventsWhileRemoveActiveInstanceTypes()
+        public
+        afterInstanceTypeAdded
+    {
+        /// Prepare
+        bytes32[] memory types = TestParams.getMockInstanceTypesOnlyParams();
+        /// Assert
+        for (uint8 i; i < types.length; i++) {
+            vm.expectEmit(true, false, false, false, address(sphere));
+            emit IOrbitSphere.AWSInstanceTypeRemoved(types[i]);
+        }
+        /// Action
+        vm.prank(_msgSender());
+        sphere.removeInstanceTypes(types);
+    }
 }

@@ -67,4 +67,29 @@ contract OrbitSphereRegionsTest is Test, Context {
             emit IOrbitSphere.AWSRegionAdded(regions[i]);
         }
     }
+
+    function test_RemoveActiveRegions() public afterRegionAdded {
+        /// Prepare
+        bytes32[] memory regions = TestParams.getMockRegionParams();
+        /// Action
+        vm.prank(_msgSender());
+        sphere.removeRegions(regions);
+        /// Assert
+        for (uint8 i; i < regions.length; i++) {
+            assert(!sphere.isActiveRegion(regions[i]));
+        }
+    }
+
+    function test__EventsWhileRemoveActiveRegions() public afterRegionAdded {
+        /// Prepare
+        bytes32[] memory regions = TestParams.getMockRegionParams();
+        /// Assert
+        for (uint8 i; i < regions.length; i++) {
+            vm.expectEmit(true, false, false, false, address(sphere));
+            emit IOrbitSphere.AWSRegionRemoved(regions[i]);
+        }
+        /// Action
+        vm.prank(_msgSender());
+        sphere.removeRegions(regions);
+    }
 }

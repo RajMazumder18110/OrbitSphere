@@ -107,7 +107,29 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             /// @dev Adding into `s_awsRegions`
             bytes32 region = regions[i];
             s_awsRegions.add(region);
+            /// @dev Emitting `AWSRegionAdded` event.
             emit AWSRegionAdded(region);
+
+            /// Gas optimization
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @notice Removes specified AWS regions from the list of active regions.
+     * @dev Only the contract owner can call this function.
+     *  - Emits AWSRegionRemoved when a region is successfully removed.
+     * @param regions The array of region identifiers to be removed.
+     */
+    function removeRegions(bytes32[] calldata regions) public onlyOwner {
+        for (uint i; i < regions.length; ) {
+            /// @dev Removing from `s_awsRegions`
+            bytes32 region = regions[i];
+            s_awsRegions.remove(region);
+            /// @dev Emitting `AWSRegionRemoved` event.
+            emit AWSRegionRemoved(region);
 
             /// Gas optimization
             unchecked {
@@ -135,6 +157,32 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             s_instanceTypeMetadata[metadata.iType] = metadata;
             /// @dev Emitting `AWSInstanceTypeAdded` event.
             emit AWSInstanceTypeAdded(metadata.iType);
+
+            /// Gas optimization
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @notice Removes specified AWS instance types from the list of active instances.
+     * @dev Only the contract owner can call this function.
+     *  - Emits AWSInstanceTypeRemoved when an instance type is successfully removed.
+     * @param instanceTypes The array of instance type identifiers to be removed.
+     */
+    function removeInstanceTypes(
+        bytes32[] calldata instanceTypes
+    ) public onlyOwner {
+        for (uint i; i < instanceTypes.length; ) {
+            /// @dev Caching
+            bytes32 instanceType = instanceTypes[i];
+            /// @dev Removing instanceType from `s_awsInstanceTypes`
+            s_awsInstanceTypes.remove(instanceType);
+            /// @dev Removing instance info from `s_instanceTypeMetadata`.
+            delete s_instanceTypeMetadata[instanceType];
+            /// @dev Emitting `AWSInstanceTypeRemoved` event.
+            emit AWSInstanceTypeRemoved(instanceType);
 
             /// Gas optimization
             unchecked {
