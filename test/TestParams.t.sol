@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 /// @notice Local imports
+import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 import {AWSRegions, AWSInstanceTypes} from "@OrbitSphere-contracts/lib/AWSConstants.sol";
 
 library TestParams {
@@ -18,11 +19,15 @@ library TestParams {
     function getMockInstanceTypeParams()
         public
         pure
-        returns (bytes32[] memory types)
+        returns (IOrbitSphere.InstanceMetadata[] memory instances)
     {
         /// Prepare
-        types = new bytes32[](2);
-        types[0] = AWSInstanceTypes.T2_MICRO;
-        types[1] = AWSInstanceTypes.T2_SMALL;
+        instances = new IOrbitSphere.InstanceMetadata[](2);
+        instances[0] = AWSInstanceTypes.getInstanceInfo(
+            AWSInstanceTypes.T2_MICRO
+        );
+        instances[1] = AWSInstanceTypes.getInstanceInfo(
+            AWSInstanceTypes.T2_SMALL
+        );
     }
 }

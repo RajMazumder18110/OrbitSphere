@@ -7,8 +7,8 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 /// @notice Local imports
 import {TestParams} from "../TestParams.t.sol";
 import {OrbitSphere} from "@OrbitSphere-contracts/OrbitSphere.sol";
-import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 import {OrbitSphereDeploy} from "@OrbitSphere-scripts/OrbitSphereDeploy.s.sol";
+import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 
 contract OrbitSphereInstanceTypesTest is Test, Context {
     /// @notice Stores the deployed `OrbitSphere` contract instance.
@@ -25,7 +25,8 @@ contract OrbitSphereInstanceTypesTest is Test, Context {
 
     modifier afterInstanceTypeAdded() {
         /// Prepare
-        bytes32[] memory types = TestParams.getMockInstanceTypeParams();
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
         /// Action
         vm.prank(_msgSender());
         sphere.addInstanceTypes(types);
@@ -35,7 +36,8 @@ contract OrbitSphereInstanceTypesTest is Test, Context {
 
     modifier beforeInstanceTypeAdded() {
         /// Prepare
-        bytes32[] memory types = TestParams.getMockInstanceTypeParams();
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
         /// Assert
         _;
         /// Action
@@ -43,20 +45,41 @@ contract OrbitSphereInstanceTypesTest is Test, Context {
         sphere.addInstanceTypes(types);
     }
 
-    function test__GetActiveInstanceTypes() public afterInstanceTypeAdded {
+    function test__getInstanceInfo() public afterInstanceTypeAdded {
+        /// Prepare
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
+
         /// Assert
-        assertEq(
-            sphere.getActiveInstanceTypes(),
-            TestParams.getMockInstanceTypeParams()
-        );
+        for (uint8 i; i < types.length; i++) {
+            assertEq(
+                abi.encode(types[i]), /// Expected
+                abi.encode(sphere.getInstanceTypeInfo(types[i].iType)) // Actual
+            );
+        }
+    }
+
+    function test__GetActiveInstanceTypes() public afterInstanceTypeAdded {
+        /// Prepare
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
+
+        bytes32[] memory expectedTypes = new bytes32[](types.length);
+        for (uint8 i; i < expectedTypes.length; i++) {
+            expectedTypes[i] = types[i].iType;
+        }
+
+        /// Assert
+        assertEq(sphere.getActiveInstanceTypes(), expectedTypes);
     }
 
     function test__AddNewInstanceTypes() public afterInstanceTypeAdded {
         /// Prepare
-        bytes32[] memory types = TestParams.getMockInstanceTypeParams();
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
         /// Assert
         for (uint8 i; i < types.length; i++) {
-            assert(sphere.isActiveInstanceType(types[i]));
+            assert(sphere.isActiveInstanceType(types[i].iType));
         }
     }
 
@@ -65,11 +88,12 @@ contract OrbitSphereInstanceTypesTest is Test, Context {
         beforeInstanceTypeAdded
     {
         /// Prepare
-        bytes32[] memory types = TestParams.getMockInstanceTypeParams();
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
         /// Assert
         for (uint8 i; i < types.length; i++) {
             vm.expectEmit(true, false, false, false, address(sphere));
-            emit IOrbitSphere.AWSInstanceTypeAdded(types[i]);
+            emit IOrbitSphere.AWSInstanceTypeAdded(types[i].iType);
         }
     }
 }

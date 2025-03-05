@@ -26,6 +26,11 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// Used for handling payments and transactions within the platform.
     IERC20Metadata public immutable TETHER_USD;
 
+    /// @notice Stores metadata for each AWS instance type.
+    /// Maps an instance type identifier to its corresponding metadata.
+    mapping(bytes32 instanceType => InstanceMetadata metadata)
+        private s_instanceTypeMetadata;
+
     /**
      * @notice Deploys the OrbitSphere contract and initializes the ERC721 token.
      * @dev Sets the name and symbol of the ERC721 token, Ownership and initializes the USDT contract.
@@ -57,6 +62,17 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         bytes32 instanceType
     ) public view returns (bool) {
         return s_awsInstanceTypes.contains(instanceType);
+    }
+
+    /**
+     * @notice Retrieves metadata for a given AWS instance type.
+     * @param instanceType The identifier of the instance type.
+     * @return metadata The metadata associated with the specified instance type.
+     */
+    function getInstanceTypeInfo(
+        bytes32 instanceType
+    ) public view returns (InstanceMetadata memory metadata) {
+        return s_instanceTypeMetadata[instanceType];
     }
 
     /**
@@ -101,19 +117,24 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     }
 
     /**
-     * @notice Adds multiple AWS instance types to the list of supported instance types.
+     * @notice  Adds multiple AWS instance types along with their metadata.
      * @dev Updates the `s_awsInstanceTypes` set to include new instance types.
+     * @dev Stores instance metadata and tracks available instance types.
      * - Only the contract owner can call this function.
-     * @param instanceTypes An array of bytes32 values representing the AWS instance types to be added.
+     * @param instanceTypes An array of `InstanceMetadata` containing details of instance types.
      */
     function addInstanceTypes(
-        bytes32[] calldata instanceTypes
+        InstanceMetadata[] calldata instanceTypes
     ) public onlyOwner {
         for (uint i; i < instanceTypes.length; ) {
-            /// @dev Adding into `s_awsInstanceTypes`
-            bytes32 instanceType = instanceTypes[i];
-            s_awsInstanceTypes.add(instanceType);
-            emit AWSInstanceTypeAdded(instanceType);
+            /// @dev Caching
+            InstanceMetadata memory metadata = instanceTypes[i];
+            /// @dev Adding instanceType into `s_awsInstanceTypes`
+            s_awsInstanceTypes.add(metadata.iType);
+            /// @dev Adding instance info into `s_instanceTypeMetadata`.
+            s_instanceTypeMetadata[metadata.iType] = metadata;
+            /// @dev Emitting `AWSInstanceTypeAdded` event.
+            emit AWSInstanceTypeAdded(metadata.iType);
 
             /// Gas optimization
             unchecked {

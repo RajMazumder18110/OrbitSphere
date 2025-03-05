@@ -38,7 +38,8 @@ contract OrbitSphereUnAuthorizedAccessTest is Test, Context {
 
     function test__AddNewInstanceTypesWhenCallerIsNotOwner() public {
         /// Prepare
-        bytes32[] memory types = TestParams.getMockInstanceTypeParams();
+        IOrbitSphere.InstanceMetadata[] memory types = TestParams
+            .getMockInstanceTypeParams();
         /// Assert & Action
         vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
         sphere.addInstanceTypes(types);
