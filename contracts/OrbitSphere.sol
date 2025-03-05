@@ -12,6 +12,7 @@ import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 
 contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// @notice Using libraries
+    using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Stores the list of supported AWS regions for server rentals
@@ -31,6 +32,12 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     mapping(bytes32 instanceType => InstanceMetadata metadata)
         private s_instanceTypeMetadata;
 
+    /// @notice Mapping to store token IDs held by each address.
+    /// @dev Uses UintSet to efficiently manage address-to-tokenID relationships.
+    /// Stores token IDs mapped to their respective owners.
+    mapping(address holder => EnumerableSet.UintSet metadata)
+        private s_tokenIdsByHolder;
+
     /**
      * @notice Deploys the OrbitSphere contract and initializes the ERC721 token.
      * @dev Sets the name and symbol of the ERC721 token, Ownership and initializes the USDT contract.
@@ -44,6 +51,12 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     }
 
     /** @notice READ METHODS */
+    function getTokenIdsByHolder(
+        address holder
+    ) public view returns (uint256[] memory ids) {
+        return s_tokenIdsByHolder[holder].values();
+    }
+
     /**
      * @notice Checks if a given AWS region is supported for server rentals.
      * @param region The AWS region to check, represented as a bytes32 value.
