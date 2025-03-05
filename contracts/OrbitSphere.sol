@@ -51,6 +51,15 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     }
 
     /** @notice READ METHODS */
+    /**
+     * @notice Returns the minimum rental duration for an OrbitSphere instance.
+     * @dev The minimum duration is set to 10 minutes.
+     * @return The minimum rental duration in seconds.
+     */
+    function getMinRentalDuration() public pure returns (uint256) {
+        return 10 minutes;
+    }
+
     function getTokenIdsByHolder(
         address holder
     ) public view returns (uint256[] memory ids) {
@@ -106,6 +115,28 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         returns (bytes32[] memory instanceTypes)
     {
         return s_awsInstanceTypes.values();
+    }
+
+    /**
+     * @notice Calculates the total cost of renting an OrbitSphere instance for a given duration.
+     * @dev Retrieves the hourly rate of the specified instance type and computes the cost based on the rental duration.
+     * @param instanceType The type of instance to be rented.
+     * @param rentingForNoOfSeconds The total duration (in seconds) for which the instance will be rented.
+     * @return usdCost The total rental cost in USD.
+     */
+    function getOrbitSphereInstanceCost(
+        bytes32 instanceType,
+        uint128 rentingForNoOfSeconds
+    ) public view returns (uint256 usdCost) {
+        /// @notice Incase if the instance type not available or minimum rental duration doesn't meet.
+        if (
+            !isActiveInstanceType(instanceType) ||
+            rentingForNoOfSeconds < getMinRentalDuration()
+        ) return 0;
+
+        /// @notice Caching instance metadata.
+        InstanceMetadata memory metadata = s_instanceTypeMetadata[instanceType];
+        return (metadata.hourlyRate * rentingForNoOfSeconds) / 1 hours;
     }
 
     /** @notice WRITE METHODS */
@@ -202,6 +233,60 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
                 ++i;
             }
         }
+    }
+
+    /**
+     * @notice Allows a user to rent an OrbitSphere instance in a specified AWS region.
+     * @dev The function validates availability, processes payment, and emits an event upon successful rental.
+     * @param region The AWS region where the instance will be deployed.
+     * @param instanceType The type of AWS instance to rent.
+     * @param rentingForNoOfSeconds rentingForNoOfSeconds The total duration (in seconds) for which the instance will be rented.
+     * @param sshPublicKey The SSH public key for accessing the rented instance.
+     */
+    function rentOrbitSphereInstance(
+        bytes32 region,
+        bytes32 instanceType,
+        uint128 rentingForNoOfSeconds,
+        bytes calldata sshPublicKey
+    ) public {
+        /// @notice Parameter Validation
+        if (!isActiveRegion(region))
+            revert OrbitSphere__UnavailableRegion(region);
+        if (!isActiveInstanceType(instanceType))
+            revert OrbitSphere__UnavailableInstanceType(instanceType);
+        if (rentingForNoOfSeconds < getMinRentalDuration())
+            revert OrbitSphere__RentalDurationTooShort(
+                rentingForNoOfSeconds,
+                getMinRentalDuration()
+            );
+
+        /// @notice Caching instance metadata.
+        InstanceMetadata memory metadata = s_instanceTypeMetadata[instanceType];
+
+        /// TODO: Save data
+        uint256 nftId = 1;
+        uint128 startedOn = uint128(block.timestamp);
+        uint128 willTerminateOn = startedOn + rentingForNoOfSeconds;
+        uint256 totalInstanceRentalCost = getOrbitSphereInstanceCost(
+            instanceType,
+            rentingForNoOfSeconds
+        );
+
+        /// @notice Minting NFT to `_msgSender()`
+        _mint(_msgSender(), nftId);
+
+        /// @notice Emitting `OrbitSphereInstanceRented` event.
+        emit OrbitSphereInstanceRented(
+            region,
+            nftId,
+            instanceType,
+            sshPublicKey,
+            startedOn,
+            willTerminateOn,
+            _msgSender(),
+            totalInstanceRentalCost,
+            metadata.hourlyRate
+        );
     }
 
     /** @notice PREVENTION METHODS */
