@@ -8,6 +8,8 @@ optimizer = true
 optimizer_runs = 200
 solc_version = "0.8.27"
 
+ignored_error_codes = ["unreachable"]
+
 remappings = [
     # Local files
     "@OrbitSphere-scripts/=script/",

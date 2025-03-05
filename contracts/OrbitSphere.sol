@@ -190,4 +190,10 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             }
         }
     }
+
+    /** @notice PREVENTION METHODS */
+    /// @notice Overrides the ERC721 transfer function to prevent token transfers.
+    function transferFrom(address, address, uint256) public virtual override {
+        revert OrbitSphere__TransfersNotAllowed();
+    }
 }

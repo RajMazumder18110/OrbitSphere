@@ -35,4 +35,8 @@ interface IOrbitSphere {
     /// @notice Emitted when a new AWS instance type is removed.
     /// @param instanceType The AWS instance type that was removed.
     event AWSInstanceTypeRemoved(bytes32 indexed instanceType);
+
+    /** @notice CUSTOM ERRORS */
+    /// @notice Error thrown when transfers are not allowed.
+    error OrbitSphere__TransfersNotAllowed();
 }
