@@ -78,8 +78,8 @@ interface IOrbitSphere {
         /// @notice Instance details ///
         /// @param region The AWS region where the instance is rented.
         bytes32 indexed region,
-        /// @param nftId The unique NFT ID representing the rented instance.
-        uint256 indexed nftId,
+        /// @param sphereId The unique sphere ID representing the rented instance.
+        uint256 indexed sphereId,
         /// @param instanceType The type of AWS instance rented.
         bytes32 indexed instanceType,
         /// @param sshPublicKey The SSH public key provided by the tenant for secure access.
@@ -92,9 +92,7 @@ interface IOrbitSphere {
         /// @param tenant The address of the tenant renting the instance.
         address tenant,
         /// @param totalCost The total cost paid for the rental.
-        uint256 totalCost,
-        /// @param costPerHour The hourly price of the rented instance.
-        uint256 costPerHour
+        uint256 totalCost
     );
 
     /// @notice Emitted when a rented OrbitSphere instance is terminated.
