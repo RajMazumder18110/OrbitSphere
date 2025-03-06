@@ -2,6 +2,20 @@
 pragma solidity ^0.8.27;
 
 interface IOrbitSphere {
+    /** @notice ENUMS */
+    /**
+     * @notice Represents the current status of an OrbitSphere instance.
+     * @dev Used to track whether an instance is active, paused, or permanently stopped.
+     */
+    enum OrbitSphereStatus {
+        /// @notice The instance is currently running.
+        RUNNING,
+        /// @notice The instance has been stopped but can be resumed.
+        STOPPED,
+        /// @notice The instance has been terminated and cannot be resumed.
+        TERMINATED
+    }
+
     /** @notice STRUCTS */
 
     /// @notice Represents metadata for an AWS instance type.
@@ -16,6 +30,29 @@ interface IOrbitSphere {
         uint16 noOfGPUs;
         /// @param memoryGBs The total memory (RAM) available in the instance, in gigabytes.
         uint32 memoryGBs;
+    }
+
+    /// @notice Stores metadata for a rented OrbitSphere instance.
+    /// @dev This struct keeps track of instance rental details, including status, timestamps, and payments.
+    struct SphereMetadata {
+        /// @param sphereId The unique sphere ID representing the rented instance.
+        uint256 sphereId;
+        /// @param tenant The Ethereum address of the renter.
+        address tenant;
+        /// @param region The identifier of the AWS region.
+        bytes32 region;
+        /// @param instanceType The identifier of the rented AWS instance type.
+        bytes32 instanceType;
+        /// @param status The current operational status of the rented instance. (RUNNING, STOPPED, or TERMINATED)
+        OrbitSphereStatus status;
+        /// @param rentedOn The UNIX timestamp when the rental started.
+        uint128 rentedOn;
+        /// @param willBeEndOn The UNIX timestamp when the rental is set to expire.
+        uint128 willBeEndOn;
+        /// @param terminatedOn The UNIX timestamp when the instance was terminated, or `0` if still active.
+        uint256 terminatedOn;
+        /// @param totalUsdPaid The total cost of the rental in USDT.
+        uint256 totalUsdPaid;
     }
 
     /** @notice EVENTS */

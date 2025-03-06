@@ -27,16 +27,21 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// Used for handling payments and transactions within the platform.
     IERC20Metadata public immutable TETHER_USD;
 
+    /// @notice Mapping to store token IDs held by each address.
+    /// @dev Uses UintSet to efficiently manage address-to-sphereId relationships.
+    /// Stores sphere IDs mapped to their respective owners.
+    mapping(address tenant => EnumerableSet.UintSet metadata)
+        private s_sphereIdsByTenant;
+
     /// @notice Stores metadata for each AWS instance type.
     /// Maps an instance type identifier to its corresponding metadata.
     mapping(bytes32 instanceType => InstanceMetadata metadata)
         private s_instanceTypeMetadata;
 
-    /// @notice Mapping to store token IDs held by each address.
-    /// @dev Uses UintSet to efficiently manage address-to-tokenID relationships.
-    /// Stores token IDs mapped to their respective owners.
-    mapping(address holder => EnumerableSet.UintSet metadata)
-        private s_tokenIdsByHolder;
+    /// @notice Stores metadata for each rented OrbitSphere instance.
+    /// @dev Maps a unique sphere ID to its corresponding `SphereMetadata` struct.
+    mapping(uint256 sphereId => SphereMetadata metadata)
+        private s_sphereMetadata;
 
     /**
      * @notice Deploys the OrbitSphere contract and initializes the ERC721 token.
@@ -60,10 +65,16 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         return 10 minutes;
     }
 
-    function getTokenIdsByHolder(
+    /**
+     * @notice Retrieves the list of Sphere IDs rented by a specific tenant.
+     * @dev Uses an enumerable set to efficiently return all Sphere IDs associated with the given tenant.
+     * @param holder The address of the tenant whose rented Sphere IDs are being queried.
+     * @return ids An array of Sphere IDs associated with the specified tenant.
+     */
+    function getSphereIdsByTenant(
         address holder
     ) public view returns (uint256[] memory ids) {
-        return s_tokenIdsByHolder[holder].values();
+        return s_sphereIdsByTenant[holder].values();
     }
 
     /**
@@ -115,6 +126,34 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         returns (bytes32[] memory instanceTypes)
     {
         return s_awsInstanceTypes.values();
+    }
+
+    /**
+     * @notice Retrieves metadata for a rented OrbitSphere instance.
+     * @param sphereId The unique ID representing the rented OrbitSphere instance.
+     * @return sphere The metadata containing details of the rented OrbitSphere instance.
+     */
+    function getOrbitSphereInfo(
+        uint256 sphereId
+    ) public view returns (SphereMetadata memory sphere) {
+        return s_sphereMetadata[sphereId];
+    }
+
+    /**
+     * @notice Retrieves metadata for a rented OrbitSphere instance and its instance type details.
+     * @param sphereId The unique ID representing the rented OrbitSphere instance.
+     * @return sphere The metadata containing details of the rented OrbitSphere instance.
+     * @return instance The metadata containing instance type specifications.
+     */
+    function getOrbitSphereInfoWithInstance(
+        uint256 sphereId
+    )
+        public
+        view
+        returns (SphereMetadata memory sphere, InstanceMetadata memory instance)
+    {
+        sphere = s_sphereMetadata[sphereId];
+        instance = getInstanceTypeInfo(sphere.instanceType);
     }
 
     /**
