@@ -335,8 +335,9 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         newSphere.status = OrbitSphereStatus.RUNNING;
         newSphere.totalUsdPaid = totalInstanceRentalCost;
 
-        /// @notice Minting OrbitSphere NFT to `tenant`.
+        /// @notice Minting OrbitSphere NFT to `tenant` and add sphereId to tenant.
         _mint(tenant, sphereId);
+        s_sphereIdsByTenant[tenant].add(sphereId);
 
         /// @notice Emitting `OrbitSphereInstanceRented` event.
         emit OrbitSphereInstanceRented(
