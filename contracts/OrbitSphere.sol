@@ -47,6 +47,18 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     mapping(uint256 sphereId => SphereMetadata metadata)
         private s_sphereMetadata;
 
+    /** @notice MODIFIERS */
+    /**
+     * @dev Ensures that the caller is the tenant of the specified OrbitSphere instance.
+     *  - Reverts with `OrbitSphere__UnauthorizedTenant` if the caller is not the owner.
+     * @param sphereId The ID of the rented OrbitSphere instance.
+     */
+    modifier onlyTenant(uint256 sphereId) {
+        if (ownerOf(sphereId) != _msgSender())
+            revert OrbitSphere__UnauthorizedTenant();
+        _;
+    }
+
     /**
      * @notice Deploys the OrbitSphere contract and initializes the ERC721 token.
      * @dev Sets the name and symbol of the ERC721 token, Ownership and initializes the USDT contract.
@@ -316,9 +328,9 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             TransactionType.TRANSFER_FROM
         );
 
-        /// @notice Referencing sphere with sphereId.
         address tenant = _msgSender();
         uint256 sphereId = ++s_sphereIds;
+        /// @notice Referencing sphere with sphereId.
         SphereMetadata storage newSphere = s_sphereMetadata[sphereId];
         /// @dev Calculating timestamps
         uint128 startedOn = uint128(block.timestamp);
@@ -349,6 +361,66 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             willTerminateOn,
             tenant,
             totalInstanceRentalCost
+        );
+    }
+
+    /**
+     * @notice The instance will be marked as terminated, and any applicable refunds will be processed.
+     * @dev Terminates a rented OrbitSphere instance.
+     *  - Can only be called by the tenant who owns the instance.
+     * @param sphereId The ID of the rented OrbitSphere instance to be terminated.
+     */
+    function terminateOrbitSphereInstance(
+        uint256 sphereId
+    ) public onlyTenant(sphereId) {
+        /// @notice Referencing sphere with sphereId.
+        address tenant = _msgSender();
+        SphereMetadata storage sphere = s_sphereMetadata[sphereId];
+        bool isTerminatingBefore = block.timestamp < sphere.willBeEndOn;
+
+        /// @dev Default the refund amount.
+        uint256 refundAmount = 0;
+        /// @dev Default actual cost.
+        uint256 actualCost = sphere.totalUsdPaid;
+        /// @dev Calculating actual time consumed.
+        uint256 timeConsumed = isTerminatingBefore
+            ? (block.timestamp - sphere.rentedOn)
+            : (sphere.willBeEndOn - sphere.rentedOn);
+
+        /// @notice Incase if tenant terminating the instance before
+        if (isTerminatingBefore) {
+            /// @dev Updating actual cost.
+            actualCost = getOrbitSphereInstanceCost(
+                sphere.instanceType,
+                uint128(timeConsumed)
+            );
+            /// @dev Calculating the refund amount if any.
+            refundAmount = sphere.totalUsdPaid - actualCost;
+
+            /// @notice Transfer the refund to tenant.
+            _doTetherUSDTransaction(
+                tenant,
+                refundAmount,
+                TransactionType.TRANSFER
+            );
+        }
+
+        /// @notice Burning OrbitSphere NFT from `tenant` and remove sphereId from tenant.
+        _burn(sphereId);
+        s_sphereIdsByTenant[tenant].remove(sphereId);
+
+        /// @notice Update the sphere details.
+        sphere.totalUsdPaid = actualCost;
+        sphere.terminatedOn = block.timestamp;
+        sphere.status = OrbitSphereStatus.TERMINATED;
+
+        /// @notice Emitting `OrbitSphereInstanceTerminated` event.
+        emit OrbitSphereInstanceTerminated(
+            tenant,
+            sphereId,
+            actualCost,
+            timeConsumed,
+            refundAmount
         );
     }
 

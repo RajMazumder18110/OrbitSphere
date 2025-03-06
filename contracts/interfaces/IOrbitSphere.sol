@@ -109,8 +109,8 @@ interface IOrbitSphere {
     event OrbitSphereInstanceTerminated(
         /// @param tenant The address of the user who rented the instance.
         address indexed tenant,
-        /// @param nftId The NFT ID representing the rented instance.
-        uint256 indexed nftId,
+        /// @param sphereId The sphere ID representing the rented instance.
+        uint256 indexed sphereId,
         /// @param actualCost The final cost incurred by the tenant based on usage.
         uint256 actualCost,
         /// @param timeConsumed The total time (in seconds) the instance was used.
@@ -131,6 +131,11 @@ interface IOrbitSphere {
 
     /// @notice Error thrown when transfers are not allowed.
     error OrbitSphere__TransfersNotAllowed();
+
+    /// @dev Thrown when a caller attempts to perform an action on an OrbitSphere instance
+    ///      but is not the authorized tenant.
+    /// @notice Only the tenant who rented the instance has permission to perform this action.
+    error OrbitSphere__UnauthorizedTenant();
 
     /// @dev Thrown when the provided AWS region is not available or inactive.
     /// @param region The unavailable AWS region provided by the user.
