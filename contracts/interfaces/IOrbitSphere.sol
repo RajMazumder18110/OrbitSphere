@@ -16,6 +16,16 @@ interface IOrbitSphere {
         TERMINATED
     }
 
+    /// @notice Represents the types of transactions for the ERC20 token.
+    enum TransactionType {
+        /// @notice Transfers ERC20 tokens from one address to another.
+        /// Standard transaction type for most token transfers.
+        TRANSFER,
+        /// @notice Transfers ERC20 tokens on behalf of an address using an allowance.
+        /// Requires prior approval from the token owner via `approve`.
+        TRANSFER_FROM
+    }
+
     /** @notice STRUCTS */
 
     /// @notice Represents metadata for an AWS instance type.

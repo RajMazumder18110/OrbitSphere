@@ -15,6 +15,14 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
+    /// @notice Stores the contract instance of the Tether USD (USDT) token.
+    /// Used for handling payments and transactions within the platform.
+    IERC20Metadata public immutable TETHER_USD;
+
+    /// @notice Counter for tracking the total number of rented OrbitSphere instances.
+    /// @dev This variable increments with each new rental and represents the latest Sphere ID.
+    uint256 private s_sphereIds;
+
     /// @notice Stores the list of supported AWS regions for server rentals
     /// to efficiently manage and check available regions.
     EnumerableSet.Bytes32Set private s_awsRegions;
@@ -22,10 +30,6 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// @notice Stores the list of supported AWS instance types for rentals.
     /// Uses EnumerableSet to efficiently manage and check available instance types.
     EnumerableSet.Bytes32Set private s_awsInstanceTypes;
-
-    /// @notice Stores the contract instance of the Tether USD (USDT) token.
-    /// Used for handling payments and transactions within the platform.
-    IERC20Metadata public immutable TETHER_USD;
 
     /// @notice Mapping to store token IDs held by each address.
     /// @dev Uses UintSet to efficiently manage address-to-sphereId relationships.
@@ -279,13 +283,13 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      * @dev The function validates availability, processes payment, and emits an event upon successful rental.
      * @param region The AWS region where the instance will be deployed.
      * @param instanceType The type of AWS instance to rent.
-     * @param rentingForNoOfSeconds rentingForNoOfSeconds The total duration (in seconds) for which the instance will be rented.
+     * @param rentalDuration The total duration (in seconds) for which the instance will be rented.
      * @param sshPublicKey The SSH public key for accessing the rented instance.
      */
     function rentOrbitSphereInstance(
         bytes32 region,
         bytes32 instanceType,
-        uint128 rentingForNoOfSeconds,
+        uint128 rentalDuration,
         bytes calldata sshPublicKey
     ) public {
         /// @notice Parameter Validation
@@ -293,38 +297,57 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             revert OrbitSphere__UnavailableRegion(region);
         if (!isActiveInstanceType(instanceType))
             revert OrbitSphere__UnavailableInstanceType(instanceType);
-        if (rentingForNoOfSeconds < getMinRentalDuration())
+
+        uint256 minimumRentalDuration = getMinRentalDuration();
+        if (rentalDuration < minimumRentalDuration)
             revert OrbitSphere__RentalDurationTooShort(
-                rentingForNoOfSeconds,
-                getMinRentalDuration()
+                rentalDuration,
+                minimumRentalDuration
             );
 
-        /// @notice Caching instance metadata.
-        InstanceMetadata memory metadata = s_instanceTypeMetadata[instanceType];
-
-        /// TODO: Save data
-        uint256 nftId = 1;
-        uint128 startedOn = uint128(block.timestamp);
-        uint128 willTerminateOn = startedOn + rentingForNoOfSeconds;
+        /// @notice Calculating rental cost and transfer from tenant.
         uint256 totalInstanceRentalCost = getOrbitSphereInstanceCost(
             instanceType,
-            rentingForNoOfSeconds
+            rentalDuration
+        );
+        _doTetherUSDTransaction(
+            address(this),
+            totalInstanceRentalCost,
+            TransactionType.TRANSFER_FROM
         );
 
-        /// @notice Minting NFT to `_msgSender()`
-        _mint(_msgSender(), nftId);
+        /// @notice Referencing sphere with sphereId.
+        address tenant = _msgSender();
+        uint256 sphereId = ++s_sphereIds;
+        SphereMetadata storage newSphere = s_sphereMetadata[sphereId];
+        /// @dev Calculating timestamps
+        uint128 startedOn = uint128(block.timestamp);
+        uint128 willTerminateOn = startedOn + rentalDuration;
+
+        /// @dev Adding details into new sphere.
+        newSphere.tenant = tenant;
+        newSphere.region = region;
+        newSphere.sphereId = sphereId;
+        newSphere.rentedOn = startedOn;
+        newSphere.instanceType = instanceType;
+        newSphere.willBeEndOn = willTerminateOn;
+        newSphere.terminatedOn = willTerminateOn;
+        newSphere.status = OrbitSphereStatus.RUNNING;
+        newSphere.totalUsdPaid = totalInstanceRentalCost;
+
+        /// @notice Minting OrbitSphere NFT to `tenant`.
+        _mint(tenant, sphereId);
 
         /// @notice Emitting `OrbitSphereInstanceRented` event.
         emit OrbitSphereInstanceRented(
             region,
-            nftId,
+            sphereId,
             instanceType,
             sshPublicKey,
             startedOn,
             willTerminateOn,
-            _msgSender(),
-            totalInstanceRentalCost,
-            metadata.hourlyRate
+            tenant,
+            totalInstanceRentalCost
         );
     }
 
@@ -332,5 +355,39 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// @notice Overrides the ERC721 transfer function to prevent token transfers.
     function transferFrom(address, address, uint256) public virtual override {
         revert OrbitSphere__TransfersNotAllowed();
+    }
+
+    /** @notice PRIVATE METHODS */
+    /**
+     * @notice Executes a specified MANTA token transaction for a given holder.
+     * @dev Supports the following types of ERC-20 transactions:
+     *      - Transferring tokens to the specified `holder`.
+     *      - Transferring tokens from the caller to the specified `holder`.
+     * @param receiver The address involved in the transaction.
+     *        - For `TRANSFER`: The recipient of the tokens.
+     *        - For `TRANSFER_FROM`: The address receiving tokens from the caller.
+     * @param amount The amount of MANTA tokens involved in the transaction.
+     * @param transactionType The type of transaction to execute:
+     *        - `TRANSFER`: Transfers `amount` tokens to the `holder`.
+     *        - `TRANSFER_FROM`: Transfers `amount` tokens from the caller to the `holder`.
+     */
+    function _doTetherUSDTransaction(
+        address receiver,
+        uint256 amount,
+        TransactionType transactionType
+    ) private {
+        /// @notice TRANSFER`: Transfers `amount` tokens to the `receiver`.
+        if (transactionType == TransactionType.TRANSFER) {
+            SafeERC20.safeTransfer(TETHER_USD, receiver, amount);
+        }
+        /// @notice `TRANSFER_FROM`: Transfers `amount` tokens from the caller to the `receiver`.
+        else if (transactionType == TransactionType.TRANSFER_FROM) {
+            SafeERC20.safeTransferFrom(
+                TETHER_USD,
+                _msgSender(),
+                receiver,
+                amount
+            );
+        }
     }
 }
