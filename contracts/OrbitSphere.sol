@@ -181,7 +181,7 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      */
     function getOrbitSphereInstanceCost(
         bytes32 instanceType,
-        uint128 rentingForNoOfSeconds
+        uint256 rentingForNoOfSeconds
     ) public view returns (uint256 usdCost) {
         /// @notice Incase if the instance type not available or minimum rental duration doesn't meet.
         if (
@@ -301,7 +301,7 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     function rentOrbitSphereInstance(
         bytes32 region,
         bytes32 instanceType,
-        uint128 rentalDuration,
+        uint256 rentalDuration,
         bytes calldata sshPublicKey
     ) public {
         /// @notice Parameter Validation
@@ -333,8 +333,8 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
         /// @notice Referencing sphere with sphereId.
         SphereMetadata storage newSphere = s_sphereMetadata[sphereId];
         /// @dev Calculating timestamps
-        uint128 startedOn = uint128(block.timestamp);
-        uint128 willTerminateOn = startedOn + rentalDuration;
+        uint256 startedOn = block.timestamp;
+        uint256 willTerminateOn = startedOn + rentalDuration;
 
         /// @dev Adding details into new sphere.
         newSphere.tenant = tenant;
@@ -392,7 +392,7 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
             /// @dev Updating actual cost.
             actualCost = getOrbitSphereInstanceCost(
                 sphere.instanceType,
-                uint128(timeConsumed)
+                timeConsumed
             );
             /// @dev Calculating the refund amount if any.
             refundAmount = sphere.totalUsdPaid - actualCost;

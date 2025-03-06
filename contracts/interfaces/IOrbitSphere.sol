@@ -35,11 +35,11 @@ interface IOrbitSphere {
         /// @param hourlyRate The hourly rental cost of the instance.
         uint64 hourlyRate;
         /// @param noOfCPUs The number of CPU cores available in the instance.
-        uint16 noOfCPUs;
+        uint64 noOfCPUs;
         /// @param noOfGPUs The number of GPUs available in the instance.
-        uint16 noOfGPUs;
+        uint64 noOfGPUs;
         /// @param memoryGBs The total memory (RAM) available in the instance, in gigabytes.
-        uint32 memoryGBs;
+        uint64 memoryGBs;
     }
 
     /// @notice Stores metadata for a rented OrbitSphere instance.
@@ -56,9 +56,9 @@ interface IOrbitSphere {
         /// @param status The current operational status of the rented instance. (RUNNING, STOPPED, or TERMINATED)
         OrbitSphereStatus status;
         /// @param rentedOn The UNIX timestamp when the rental started.
-        uint128 rentedOn;
+        uint256 rentedOn;
         /// @param willBeEndOn The UNIX timestamp when the rental is set to expire.
-        uint128 willBeEndOn;
+        uint256 willBeEndOn;
         /// @param terminatedOn The UNIX timestamp when the instance was terminated, or `0` if still active.
         uint256 terminatedOn;
         /// @param totalUsdPaid The total cost of the rental in USDT.
@@ -95,9 +95,9 @@ interface IOrbitSphere {
         /// @param sshPublicKey The SSH public key provided by the tenant for secure access.
         bytes sshPublicKey,
         /// @param rentedOn The timestamp when the instance was rented.
-        uint128 rentedOn,
+        uint256 rentedOn,
         /// @param willBeEndOn The timestamp when the rental period will end.
-        uint128 willBeEndOn,
+        uint256 willBeEndOn,
         /// @notice Tenant details ///
         /// @param tenant The address of the tenant renting the instance.
         address tenant,

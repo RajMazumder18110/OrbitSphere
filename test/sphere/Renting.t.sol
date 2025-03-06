@@ -125,10 +125,10 @@ contract OrbitSphereRentingTest is Test, Context {
                 tenant: _msgSender(),
                 totalUsdPaid: rentalCost,
                 region: AWSRegions.ASIA_MUMBAI,
-                rentedOn: uint128(block.timestamp),
+                rentedOn: block.timestamp,
                 instanceType: AWSInstanceTypes.T2_MICRO,
-                willBeEndOn: uint128(block.timestamp + 1 hours),
-                terminatedOn: uint128(block.timestamp + 1 hours),
+                willBeEndOn: block.timestamp + 1 hours,
+                terminatedOn: block.timestamp + 1 hours,
                 status: IOrbitSphere.OrbitSphereStatus.RUNNING
             });
 
@@ -154,10 +154,10 @@ contract OrbitSphereRentingTest is Test, Context {
                 tenant: _msgSender(),
                 totalUsdPaid: rentalCost,
                 region: AWSRegions.ASIA_MUMBAI,
-                rentedOn: uint128(block.timestamp),
+                rentedOn: block.timestamp,
                 instanceType: AWSInstanceTypes.T2_MICRO,
-                willBeEndOn: uint128(block.timestamp + 1 hours),
-                terminatedOn: uint128(block.timestamp + 1 hours),
+                willBeEndOn: block.timestamp + 1 hours,
+                terminatedOn: block.timestamp + 1 hours,
                 status: IOrbitSphere.OrbitSphereStatus.RUNNING
             });
 
@@ -193,8 +193,8 @@ contract OrbitSphereRentingTest is Test, Context {
             1,
             AWSInstanceTypes.T2_MICRO,
             bytes("MY SSH PUBLIC KEY"),
-            uint128(block.timestamp),
-            uint128(block.timestamp + 1 hours),
+            block.timestamp,
+            block.timestamp + 1 hours,
             _msgSender(),
             rentalCost
         );
