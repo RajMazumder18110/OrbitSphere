@@ -5,7 +5,9 @@ pragma solidity ^0.8.27;
 import {Script} from "forge-std/Script.sol";
 /// @notice Local imports
 import {OrbitSphere} from "@OrbitSphere-contracts/OrbitSphere.sol";
+import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 import {NetworkConfigs, Config} from "@OrbitSphere-scripts/NetworkConfigs.s.sol";
+import {AWSRegions, AWSInstanceTypes} from "@OrbitSphere-contracts/lib/AWSConstants.sol";
 
 contract OrbitSphereDeploy is Script {
     /**
@@ -18,10 +20,27 @@ contract OrbitSphereDeploy is Script {
         NetworkConfigs networkConfigs = new NetworkConfigs();
         Config memory configs = networkConfigs.getActiveChainConfigs();
 
+        /// @notice Preparing regions
+        bytes32[] memory regions = new bytes32[](1);
+        regions[0] = AWSRegions.ASIA_MUMBAI;
+
+        /// @notice Preparing instance types
+        IOrbitSphere.InstanceMetadata[]
+            memory instances = new IOrbitSphere.InstanceMetadata[](1);
+        instances[0] = AWSInstanceTypes.getInstanceInfo(
+            AWSInstanceTypes.T2_MICRO
+        );
+
         /// @notice Starting transaction
         vm.startBroadcast();
         /// @notice Deploying OrbitSphere
         sphere = new OrbitSphere(configs.tetherUSD);
+
+        /// @notice Adding region
+        sphere.addRegions(regions);
+        /// @notice Adding instance types
+        sphere.addInstanceTypes(instances);
+
         /// @notice Ending transaction
         vm.stopBroadcast();
     }
