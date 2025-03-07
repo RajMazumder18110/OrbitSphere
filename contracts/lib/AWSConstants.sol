@@ -25,7 +25,7 @@ library AWSInstanceTypes {
             return
                 IOrbitSphere.InstanceMetadata({
                     iType: T2_MICRO,
-                    hourlyRate: 1e6,
+                    hourlyRate: 20000, // 0.02 USDT
                     noOfCPUs: 1,
                     noOfGPUs: 0,
                     memoryGBs: 1
@@ -34,7 +34,7 @@ library AWSInstanceTypes {
             return
                 IOrbitSphere.InstanceMetadata({
                     iType: T2_SMALL,
-                    hourlyRate: 1e6,
+                    hourlyRate: 30000, // 0.03 USDT
                     noOfCPUs: 1,
                     noOfGPUs: 0,
                     memoryGBs: 2
@@ -43,7 +43,7 @@ library AWSInstanceTypes {
             return
                 IOrbitSphere.InstanceMetadata({
                     iType: T2_MEDIUM,
-                    hourlyRate: 1e6,
+                    hourlyRate: 50000, // 0.05 USDT
                     noOfCPUs: 2,
                     noOfGPUs: 0,
                     memoryGBs: 4
@@ -52,7 +52,7 @@ library AWSInstanceTypes {
             return
                 IOrbitSphere.InstanceMetadata({
                     iType: T2_LARGE,
-                    hourlyRate: 1e6,
+                    hourlyRate: 120000, // 0.12 USDT
                     noOfCPUs: 2,
                     noOfGPUs: 0,
                     memoryGBs: 8
@@ -61,7 +61,7 @@ library AWSInstanceTypes {
             return
                 IOrbitSphere.InstanceMetadata({
                     iType: T2_XLARGE,
-                    hourlyRate: 1e6,
+                    hourlyRate: 220000, /// 0.22 USDT
                     noOfCPUs: 4,
                     noOfGPUs: 0,
                     memoryGBs: 16
