@@ -23,6 +23,9 @@ contract NetworkConfigs is Script {
         if (block.chainid == 1) {
             s_activeConfig = getEthereumNetworkConfigs();
         }
+        if (block.chainid == 97) {
+            s_activeConfig = getBinanceTestnetNetworkConfigs();
+        }
         /// @notice Fallback to Anvil chain
         else {
             s_activeConfig = getAnvilNetworkConfigs();
@@ -54,6 +57,19 @@ contract NetworkConfigs is Script {
         returns (Config memory config)
     {
         return Config({tetherUSD: 0xdAC17F958D2ee523a2206206994597C13D831ec7});
+    }
+
+    /**
+     * @notice Returns the configuration settings for the BSC Testnet network.
+     * @dev Provides the address of the Tether USD (USDT) contract on BSC Testnet.
+     * @return config A `Config` struct containing the BSC Testnet network settings.
+     */
+    function getBinanceTestnetNetworkConfigs()
+        private
+        pure
+        returns (Config memory config)
+    {
+        return Config({tetherUSD: 0x1Dd8Fd2Fb6D3a51aAc5803b58E4135bbe2Eec841});
     }
 
     /** @notice WRITE METHODS */
