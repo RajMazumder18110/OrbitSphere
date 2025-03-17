@@ -1,0 +1,2 @@
+deploy-bsc-testnet:
+	@forge script script/OrbitSphereDeploy.s.sol:OrbitSphereDeploy --rpc-url https://data-seed-prebsc-1-s1.binance.org:8545 --account orbitsphere --broadcast --verify --verifier-api-key 
