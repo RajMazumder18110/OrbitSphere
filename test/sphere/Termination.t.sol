@@ -53,7 +53,7 @@ contract OrbitSphereTerminationTest is Test, Context {
         sphere.TETHER_USD().approve(address(sphere), rentalCost);
 
         /// @notice Renting a server.
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.ASIA_MUMBAI,
             AWSInstanceTypes.T2_MICRO,
             1 hours,
@@ -69,7 +69,7 @@ contract OrbitSphereTerminationTest is Test, Context {
         uint256[] memory ids = new uint256[](0);
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
         /// Assert
         assertEq(sphere.getSphereIdsByTenant(_msgSender()), ids);
     }
@@ -80,7 +80,7 @@ contract OrbitSphereTerminationTest is Test, Context {
     {
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
         /// Assert
         assertEq(sphere.balanceOf(_msgSender()), 0);
     }
@@ -112,7 +112,7 @@ contract OrbitSphereTerminationTest is Test, Context {
 
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
 
         /// Assert
         assertEq(
@@ -141,14 +141,14 @@ contract OrbitSphereTerminationTest is Test, Context {
                 totalUsdPaid: actualRentalCost,
                 region: AWSRegions.ASIA_MUMBAI,
                 willBeEndOn: rentedOn + 1 hours,
-                terminatedOn: block.timestamp,
+                terminatedOn: rentedOn + 1 hours,
                 instanceType: AWSInstanceTypes.T2_MICRO,
                 status: IOrbitSphere.OrbitSphereStatus.TERMINATED
             });
 
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
         uint256 usdtBalanceAfter = sphere.TETHER_USD().balanceOf(
             address(sphere)
         );
@@ -190,7 +190,7 @@ contract OrbitSphereTerminationTest is Test, Context {
         );
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
     }
 
     /** @notice FAILURE */
@@ -200,7 +200,7 @@ contract OrbitSphereTerminationTest is Test, Context {
     {
         /// Action
         vm.startPrank(_msgSender());
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
         /// Assert
         vm.expectPartialRevert(IERC721Errors.ERC721NonexistentToken.selector);
         sphere.ownerOf(1);
@@ -216,6 +216,6 @@ contract OrbitSphereTerminationTest is Test, Context {
         );
         /// Action
         vm.prank(address(10));
-        sphere.terminateOrbitSphereInstance(1);
+        sphere.terminateSphere(1);
     }
 }

@@ -52,7 +52,7 @@ contract OrbitSphereRentingTest is Test, Context {
         sphere.TETHER_USD().approve(address(sphere), rentalCost);
 
         /// @notice Renting a server.
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.ASIA_MUMBAI,
             AWSInstanceTypes.T2_MICRO,
             1 hours,
@@ -76,7 +76,7 @@ contract OrbitSphereRentingTest is Test, Context {
 
         /// Action
         /// @notice Renting a server.
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.ASIA_MUMBAI,
             AWSInstanceTypes.T2_MICRO,
             1 hours,
@@ -207,7 +207,7 @@ contract OrbitSphereRentingTest is Test, Context {
             IOrbitSphere.OrbitSphere__UnavailableRegion.selector
         );
         /// Action
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.US_CALIFORNIA,
             AWSInstanceTypes.T2_MICRO,
             1 hours,
@@ -223,7 +223,7 @@ contract OrbitSphereRentingTest is Test, Context {
             IOrbitSphere.OrbitSphere__UnavailableInstanceType.selector
         );
         /// Action
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.ASIA_MUMBAI,
             AWSInstanceTypes.T2_XLARGE,
             1 hours,
@@ -239,7 +239,7 @@ contract OrbitSphereRentingTest is Test, Context {
             IOrbitSphere.OrbitSphere__RentalDurationTooShort.selector
         );
         /// Action
-        sphere.rentOrbitSphereInstance(
+        sphere.rentSphere(
             AWSRegions.ASIA_MUMBAI,
             AWSInstanceTypes.T2_MICRO,
             1,

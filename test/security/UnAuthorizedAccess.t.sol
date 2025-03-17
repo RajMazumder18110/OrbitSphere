@@ -60,4 +60,12 @@ contract OrbitSphereUnAuthorizedAccessTest is Test, Context {
         vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
         sphere.removeInstanceTypes(types);
     }
+
+    function test__TerminateExpiredSphereWhenCallerIsNotOwner() public {
+        /// Prepare
+        uint256[] memory spherIds = new uint256[](0);
+        /// Assert & Action
+        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        sphere.forceTerminateSpheres(spherIds);
+    }
 }

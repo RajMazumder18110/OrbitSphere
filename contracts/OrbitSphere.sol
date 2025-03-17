@@ -298,7 +298,7 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      * @param rentalDuration The total duration (in seconds) for which the instance will be rented.
      * @param sshPublicKey The SSH public key for accessing the rented instance.
      */
-    function rentOrbitSphereInstance(
+    function rentSphere(
         bytes32 region,
         bytes32 instanceType,
         uint256 rentalDuration,
@@ -367,61 +367,37 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /**
      * @notice The instance will be marked as terminated, and any applicable refunds will be processed.
      * @dev Terminates a rented OrbitSphere instance.
+     *  the internal `_terminate` function effectively shutting down expired instance.
      *  - Can only be called by the tenant who owns the instance.
      * @param sphereId The ID of the rented OrbitSphere instance to be terminated.
      */
-    function terminateOrbitSphereInstance(
-        uint256 sphereId
-    ) public onlyTenant(sphereId) {
-        /// @notice Referencing sphere with sphereId.
-        address tenant = _msgSender();
-        SphereMetadata storage sphere = s_sphereMetadata[sphereId];
-        bool isTerminatingBefore = block.timestamp < sphere.willBeEndOn;
+    function terminateSphere(uint256 sphereId) public onlyTenant(sphereId) {
+        /// @dev Terminate the sphere.
+        _terminate(sphereId);
+    }
 
-        /// @dev Default the refund amount.
-        uint256 refundAmount = 0;
-        /// @dev Default actual cost.
-        uint256 actualCost = sphere.totalUsdPaid;
-        /// @dev Calculating actual time consumed.
-        uint256 timeConsumed = isTerminatingBefore
-            ? (block.timestamp - sphere.rentedOn)
-            : (sphere.willBeEndOn - sphere.rentedOn);
+    /**
+     * @notice Terminates expired server instances associated with given sphere IDs.
+     * @dev This function iterates through the provided array of sphere IDs and calls
+     *      the internal `_terminate` function for each, effectively shutting down expired instances.
+     * @param sphereIds An array of sphere IDs representing the instances to be terminated.
+     * @custom:restriction Only the contract owner can call this function.
+     */
+    function forceTerminateSpheres(
+        uint256[] memory sphereIds
+    ) public onlyOwner {
+        /// Caching
+        uint256 len = sphereIds.length;
+        for (uint i; i < len; ) {
+            /// @dev Terminate sphere
+            uint256 sphereId = sphereIds[i];
+            _terminate(sphereId);
 
-        /// @notice Incase if tenant terminating the instance before
-        if (isTerminatingBefore) {
-            /// @dev Updating actual cost.
-            actualCost = getOrbitSphereInstanceCost(
-                sphere.instanceType,
-                timeConsumed
-            );
-            /// @dev Calculating the refund amount if any.
-            refundAmount = sphere.totalUsdPaid - actualCost;
-
-            /// @notice Transfer the refund to tenant.
-            _doTetherUSDTransaction(
-                tenant,
-                refundAmount,
-                TransactionType.TRANSFER
-            );
+            /// Gas optimization
+            unchecked {
+                ++i;
+            }
         }
-
-        /// @notice Burning OrbitSphere NFT from `tenant` and remove sphereId from tenant.
-        _burn(sphereId);
-        s_sphereIdsByTenant[tenant].remove(sphereId);
-
-        /// @notice Update the sphere details.
-        sphere.totalUsdPaid = actualCost;
-        sphere.terminatedOn = block.timestamp;
-        sphere.status = OrbitSphereStatus.TERMINATED;
-
-        /// @notice Emitting `OrbitSphereInstanceTerminated` event.
-        emit OrbitSphereInstanceTerminated(
-            tenant,
-            sphereId,
-            actualCost,
-            timeConsumed,
-            refundAmount
-        );
     }
 
     /** @notice PREVENTION METHODS */
@@ -462,5 +438,62 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
                 amount
             );
         }
+    }
+
+    /**
+     * @notice The instance will be marked as terminated, and any applicable refunds will be processed.
+     * @dev Terminates a rented OrbitSphere instance.
+     * @param sphereId The ID of the rented OrbitSphere instance to be terminated.
+     */
+    function _terminate(uint256 sphereId) private {
+        /// @notice Referencing sphere with sphereId.
+        SphereMetadata storage sphere = s_sphereMetadata[sphereId];
+        address tenant = sphere.tenant;
+        bool isTerminatingBefore = block.timestamp < sphere.willBeEndOn;
+
+        /// @dev Default the refund amount.
+        uint256 refundAmount = 0;
+        /// @dev Default actual cost.
+        uint256 actualCost = sphere.totalUsdPaid;
+        /// @dev Calculating actual time consumed.
+        uint256 timeConsumed = isTerminatingBefore
+            ? (block.timestamp - sphere.rentedOn)
+            : (sphere.willBeEndOn - sphere.rentedOn);
+
+        /// @notice Incase if tenant terminating the instance before
+        if (isTerminatingBefore) {
+            /// @dev Updating actual cost.
+            actualCost = getOrbitSphereInstanceCost(
+                sphere.instanceType,
+                timeConsumed
+            );
+            /// @dev Calculating the refund amount if any.
+            refundAmount = sphere.totalUsdPaid - actualCost;
+
+            /// @notice Transfer the refund to tenant.
+            _doTetherUSDTransaction(
+                tenant,
+                refundAmount,
+                TransactionType.TRANSFER
+            );
+        }
+
+        /// @notice Burning OrbitSphere NFT from `tenant` and remove sphereId from tenant.
+        _burn(sphereId);
+        s_sphereIdsByTenant[tenant].remove(sphereId);
+
+        /// @notice Update the sphere details.
+        sphere.totalUsdPaid = actualCost;
+        sphere.terminatedOn = sphere.willBeEndOn;
+        sphere.status = OrbitSphereStatus.TERMINATED;
+
+        /// @notice Emitting `OrbitSphereInstanceTerminated` event.
+        emit OrbitSphereInstanceTerminated(
+            tenant,
+            sphereId,
+            actualCost,
+            timeConsumed,
+            refundAmount
+        );
     }
 }
