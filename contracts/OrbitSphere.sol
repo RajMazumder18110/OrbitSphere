@@ -2,18 +2,30 @@
 pragma solidity ^0.8.27;
 
 /// @notice Library imports
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721, IERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IERC165, ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {AccessControl, IAccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 /// @notice Local imports
 import {IOrbitSphere} from "@OrbitSphere-contracts/interfaces/IOrbitSphere.sol";
 
-contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
+contract OrbitSphere is IOrbitSphere, AccessControl, ERC721 {
     /// @notice Using libraries
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
+
+    /// @notice Roles for OrbitSphere
+    bytes32 public constant ORBIT_SPHERE_MANAGER =
+        keccak256("ORBIT_SPHERE_MANAGER");
+    bytes32 public constant ORBIT_SPHERE_TERMINATOR =
+        keccak256("ORBIT_SPHERE_TERMINATOR");
+
+    /// @notice OrbitSphere deployer.
+    /// Used for handling payments and transactions within the platform.
+    address public immutable ORBIT_SPHERE_DEPLOYER;
 
     /// @notice Stores the contract instance of the Tether USD (USDT) token.
     /// Used for handling payments and transactions within the platform.
@@ -64,10 +76,15 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      * @dev Sets the name and symbol of the ERC721 token, Ownership and initializes the USDT contract.
      * @param tetherUSD The address of the Tether USD (USDT) token contract.
      */
-    constructor(
-        address tetherUSD
-    ) Ownable(_msgSender()) ERC721("OrbitSphere", "ORBIT") {
-        /// @notice Initializing Tether USD (USDT)
+    constructor(address tetherUSD) ERC721("OrbitSphere", "ORBIT") {
+        /// Assinging roles
+        address owner = _msgSender();
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(ORBIT_SPHERE_MANAGER, owner);
+        _grantRole(ORBIT_SPHERE_TERMINATOR, owner);
+
+        /// @notice Initializing Tether USD (USDT) & deployer
+        ORBIT_SPHERE_DEPLOYER = owner;
         TETHER_USD = IERC20Metadata(tetherUSD);
     }
 
@@ -198,10 +215,12 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /**
      * @notice Adds multiple AWS regions to the list of supported regions.
      * @dev Updates the `s_awsRegions` set to include new regions.
-     * - Only the contract owner can call this function.
+     * - Only the OrbitSphere managers can call this function.
      * @param regions An array of bytes32 values representing the AWS regions to be added.
      */
-    function addRegions(bytes32[] calldata regions) public onlyOwner {
+    function addRegions(
+        bytes32[] calldata regions
+    ) public onlyRole(ORBIT_SPHERE_MANAGER) {
         for (uint i; i < regions.length; ) {
             /// @dev Adding into `s_awsRegions`
             bytes32 region = regions[i];
@@ -218,11 +237,13 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
 
     /**
      * @notice Removes specified AWS regions from the list of active regions.
-     * @dev Only the contract owner can call this function.
+     * @dev Only the OrbitSphere managers can call this function.
      *  - Emits AWSRegionRemoved when a region is successfully removed.
      * @param regions The array of region identifiers to be removed.
      */
-    function removeRegions(bytes32[] calldata regions) public onlyOwner {
+    function removeRegions(
+        bytes32[] calldata regions
+    ) public onlyRole(ORBIT_SPHERE_MANAGER) {
         for (uint i; i < regions.length; ) {
             /// @dev Removing from `s_awsRegions`
             bytes32 region = regions[i];
@@ -241,12 +262,12 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      * @notice  Adds multiple AWS instance types along with their metadata.
      * @dev Updates the `s_awsInstanceTypes` set to include new instance types.
      * @dev Stores instance metadata and tracks available instance types.
-     * - Only the contract owner can call this function.
+     * - Only the OrbitSphere managers can call this function.
      * @param instanceTypes An array of `InstanceMetadata` containing details of instance types.
      */
     function addInstanceTypes(
         InstanceMetadata[] calldata instanceTypes
-    ) public onlyOwner {
+    ) public onlyRole(ORBIT_SPHERE_MANAGER) {
         for (uint i; i < instanceTypes.length; ) {
             /// @dev Caching
             InstanceMetadata memory metadata = instanceTypes[i];
@@ -266,13 +287,13 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
 
     /**
      * @notice Removes specified AWS instance types from the list of active instances.
-     * @dev Only the contract owner can call this function.
+     * @dev Only the OrbitSphere managers can call this function.
      *  - Emits AWSInstanceTypeRemoved when an instance type is successfully removed.
      * @param instanceTypes The array of instance type identifiers to be removed.
      */
     function removeInstanceTypes(
         bytes32[] calldata instanceTypes
-    ) public onlyOwner {
+    ) public onlyRole(ORBIT_SPHERE_MANAGER) {
         for (uint i; i < instanceTypes.length; ) {
             /// @dev Caching
             bytes32 instanceType = instanceTypes[i];
@@ -385,7 +406,7 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
      */
     function forceTerminateSpheres(
         uint256[] memory sphereIds
-    ) public onlyOwner {
+    ) public onlyRole(ORBIT_SPHERE_TERMINATOR) {
         /// Caching
         uint256 len = sphereIds.length;
         for (uint i; i < len; ) {
@@ -404,6 +425,19 @@ contract OrbitSphere is IOrbitSphere, Ownable, ERC721 {
     /// @notice Overrides the ERC721 transfer function to prevent token transfers.
     function transferFrom(address, address, uint256) public virtual override {
         revert OrbitSphere__TransfersNotAllowed();
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721, AccessControl) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IAccessControl).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /** @notice PRIVATE METHODS */

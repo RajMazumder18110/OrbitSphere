@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 /// @notice Library imports
 import {Test, console} from "forge-std/Test.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 /// @notice Local imports
 import {TestParams} from "../TestParams.t.sol";
 import {OrbitSphere} from "@OrbitSphere-contracts/OrbitSphere.sol";
@@ -24,48 +24,62 @@ contract OrbitSphereUnAuthorizedAccessTest is Test, Context {
         sphere = orbiter.run();
     }
 
-    function test__OwnerIsSameAsMsgSender() public view {
-        assert(sphere.owner() == _msgSender());
-    }
-
-    function test__AddNewRegionsWhenCallerIsNotOwner() public {
+    function test__AddNewRegionsWhenCallerIsNotOrbitSphereManager() public {
         /// Prepare
         bytes32[] memory regions = TestParams.getMockRegionParams();
         /// Assert & Action
-        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        vm.expectPartialRevert(
+            IAccessControl.AccessControlUnauthorizedAccount.selector
+        );
         sphere.addRegions(regions);
     }
 
-    function test__RemoveActiveRegionsWhenCallerIsNotOwner() public {
+    function test__RemoveActiveRegionsWhenCallerIsNotOrbitSphereManager()
+        public
+    {
         /// Prepare
         bytes32[] memory regions = TestParams.getMockRegionParams();
         /// Assert & Action
-        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        vm.expectPartialRevert(
+            IAccessControl.AccessControlUnauthorizedAccount.selector
+        );
         sphere.removeRegions(regions);
     }
 
-    function test__AddNewInstanceTypesWhenCallerIsNotOwner() public {
+    function test__AddNewInstanceTypesWhenCallerIsNotOrbitSphereManager()
+        public
+    {
         /// Prepare
         IOrbitSphere.InstanceMetadata[] memory types = TestParams
             .getMockInstanceTypeParams();
         /// Assert & Action
-        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        vm.expectPartialRevert(
+            IAccessControl.AccessControlUnauthorizedAccount.selector
+        );
         sphere.addInstanceTypes(types);
     }
 
-    function test__RemoveActiveInstanceTypesWhenCallerIsNotOwner() public {
+    function test__RemoveActiveInstanceTypesWhenCallerIsNotOrbitSphereManager()
+        public
+    {
         /// Prepare
         bytes32[] memory types = TestParams.getMockInstanceTypesOnlyParams();
         /// Assert & Action
-        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        vm.expectPartialRevert(
+            IAccessControl.AccessControlUnauthorizedAccount.selector
+        );
         sphere.removeInstanceTypes(types);
     }
 
-    function test__TerminateExpiredSphereWhenCallerIsNotOwner() public {
+    function test__TerminateExpiredSphereWhenCallerIsNotOrbitSphereTerminator()
+        public
+    {
         /// Prepare
         uint256[] memory spherIds = new uint256[](0);
         /// Assert & Action
-        vm.expectPartialRevert(Ownable.OwnableUnauthorizedAccount.selector);
+        vm.expectPartialRevert(
+            IAccessControl.AccessControlUnauthorizedAccount.selector
+        );
         sphere.forceTerminateSpheres(spherIds);
     }
 }
