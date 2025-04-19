@@ -152,4 +152,17 @@ interface IOrbitSphere {
         uint256 provided,
         uint256 required
     );
+
+    /**
+     * @dev Error thrown when the specified rental duration exceeds the maximum allowed rental duration.
+     * @param rentalDuration The duration of the rental that was attempted.
+     * @param maxRentalDuration The maximum permissible rental duration.
+     */
+    error OrbitSphere__RentalDurationTooLong(
+        uint256 rentalDuration,
+        uint256 maxRentalDuration
+    );
+
+    /// @notice Throws error after reaching 100 sphere deployments.
+    error OrbitSphere__BetaPhraseEnded();
 }

@@ -343,11 +343,28 @@ contract OrbitSphere is IOrbitSphere, AccessControl, ERC721 {
             instanceType,
             rentalDuration
         );
-        _doTetherUSDTransaction(
-            address(this),
-            totalInstanceRentalCost,
-            TransactionType.TRANSFER_FROM
-        );
+
+        //// BETA TESTING PHRASE ////
+        /// @notice Limit the beta phrase.
+        if (s_sphereIds >= 100) revert OrbitSphere__BetaPhraseEnded();
+
+        /// @notice Setting max rental duration for 7 days.
+        uint256 maxRentalDuration = 7 days;
+        if (rentalDuration > maxRentalDuration)
+            revert OrbitSphere__RentalDurationTooLong(
+                rentalDuration,
+                maxRentalDuration
+            );
+
+        /// @notice Disable USDT transfer for beta testing.
+        /// @dev Transferring USDT from tenant to OrbitSphere.
+        // _doTetherUSDTransaction(
+        //     address(this),
+        //     totalInstanceRentalCost,
+        //     TransactionType.TRANSFER_FROM
+        // );
+
+        //// BETA TESTING PHRASE ////
 
         address tenant = _msgSender();
         uint256 sphereId = ++s_sphereIds;
